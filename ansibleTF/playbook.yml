@@ -1,0 +1,99 @@
+  - hosts: webserver
+    become: true
+    tasks:
+      
+      - name: install require packages
+        apt: 
+          name: 
+            - php-fpm
+            - mysql-server
+            - php-mysql
+            - nginx
+            - python3-pip
+          state: present
+          update_cache: true
+
+      - name: 'Install pymysql module'
+        pip:
+          name: 'PyMySQL'
+          state: present   
+
+      - name: Create a directory if it does not exist
+        ansible.builtin.file:
+          path: /home/ubuntu/opt
+          state: directory
+          mode: '0755'
+
+      
+      - name: download an install wordpress
+        unarchive:
+          src: https://wordpress.org/latest.tar.gz
+          dest: /home/ubuntu/opt
+          owner: www-data
+          group: www-data
+          remote_src: true
+
+
+      - name: upload php config files
+        copy:
+          src: wp-config.php
+          dest: /home/ubuntu/opt/wordpress/wp-config.php
+          owner: www-data
+          group: www-data
+
+      - name: Start mysql service
+        systemd: name=mysql state=started enabled=yes
+
+
+
+      - name: set root mysql password
+        mysql_user: 
+          name: root 
+          password: rootpass
+          login_user: root
+          login_password: rootpass
+          check_implicit_admin: yes
+          priv: "*.*:ALL,GRANT"
+          login_unix_socket: /var/run/mysqld/mysqld.sock
+        
+
+      - name: Create WP mysql user
+        community.mysql.mysql_user:
+          name: wp_user
+          password: wp_pass
+          priv: '*.*:ALL'
+          login_user: root
+          login_password: rootpass
+          state: present
+        
+     
+      - name: Create WP Database
+        mysql_db:
+          name: wordpress
+          state: present
+          login_user: root
+          login_password: rootpass
+        
+
+
+      - name: copy nginx conf
+        copy:
+          src: nginx.conf
+          dest: /etc/nginx/sites-enabled/default
+
+
+      - name: restart nginx
+        service:
+          name: nginx
+          state: restarted  
+          
+
+
+
+
+           
+
+
+
+        
+        

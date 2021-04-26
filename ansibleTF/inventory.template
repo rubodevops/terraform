@@ -1,0 +1,2 @@
+[webserver]
+web_server_01 ansible_connection=ssh ansible_ssh_host=${public_ip} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=/home/rubo/Downloads/aws-demo777.pem
